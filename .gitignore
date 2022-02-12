@@ -1,0 +1,15 @@
+# venv
+venv/
+
+# cache
+__pycache__/
+.pytest_cache/
+cache/
+*.sock
+*.sqlite3
+
+# IDE
+.vscode/
+
+# temp
+.static_root/

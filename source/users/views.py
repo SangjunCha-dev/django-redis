@@ -1,0 +1,164 @@
+from django.core.cache import cache
+from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
+from .serializers import *
+from common.permission import LoginRequired
+
+
+user_retrieve_response = openapi.Response('', UserInfoSerializer)
+login_retrieve_response = openapi.Response('', LoginResponseSerializer)
+refreshtoken_retrieve_response = openapi.Response('', RefreshTokenResponseSerializer)
+
+
+class CreateUserView(APIView):
+    '''
+    계정 정보
+    '''
+    permission_classes = (AllowAny,)
+
+    @swagger_auto_schema(request_body=CreateUserSerializer, responses={201: CreateUserResponseSerializer})
+    def post(self, request):
+        '''
+        계정 생성
+
+        ---
+        '''
+        data = request.data
+
+        serializer = CreateUserSerializer(data=data)
+
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        userid = serializer.create(validated_data=serializer.validated_data)
+
+        return Response(data={'userid': userid}, status=status.HTTP_201_CREATED)
+
+
+class UserView(APIView):
+    '''
+    계정 정보
+    '''
+    permission_classes = (LoginRequired,)
+    authentication_classes = (JWTAuthentication,)
+
+    @swagger_auto_schema(responses={200: user_retrieve_response})
+    def get(self, request):
+        '''
+        로그인한 계정 정보 조회
+
+        ---
+        사용자 계정 ID, 이메일, 가입일자, 최근 로그인 일자 조회
+        '''
+        cache_key = {'users': request.user}
+        user_cache = cache.get(cache_key)
+
+        response_data = {}
+        if user_cache is None:
+            serializer = UserInfoSerializer(request.user)
+            response_data = serializer.data
+            cache.set(cache_key, response_data)
+        else:
+            response_data = user_cache
+
+        return Response(data=response_data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(request_body=ChangePasswordSerializer, responses={200: ''})
+    def put(self, request):
+        '''
+        계정 비밀번호 수정
+
+        ---
+        '''
+        data = request.data
+        data['user'] = request.user
+
+        serializer = ChangePasswordSerializer(data['user'], data=data)
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        if not serializer.validate_user(data):
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save(data)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class LoginView(APIView):
+    '''
+    로그인
+    '''
+    permission_classes = (AllowAny,)
+
+    @swagger_auto_schema(request_body=LoginSerializer, responses={201: login_retrieve_response})
+    def post(self, request):
+        '''
+        로그인
+
+        ---
+        '''
+        data = request.data
+        
+        serializer = LoginSerializer(data=data)
+
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(data=serializer.validated_data, status=status.HTTP_201_CREATED)
+
+
+class LogoutView(APIView):
+    '''
+    로그아웃
+    '''
+    permission_classes = (LoginRequired,)
+    authentication_classes = (JWTAuthentication,)
+
+    @swagger_auto_schema(request_body=LogoutSerializer, responses={200: ''})
+    def post(self, request):
+        '''
+        로그아웃
+
+        ---
+        '''
+        serializer = LogoutSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.validated_data.blacklist()
+        
+        cache_key = {'users': request.user}
+        cache.delete(cache_key)
+
+        response = Response(status=status.HTTP_200_OK)
+        response.delete_cookie('refresh_token')
+        response.delete_cookie('access_token')
+        return response
+
+
+class TokenRefreshView(APIView):
+    '''
+    Access Token 재발급
+    '''
+    permission_classes = (AllowAny,)
+
+    @swagger_auto_schema(request_body=RefreshTokenSerializer, responses={201: refreshtoken_retrieve_response})
+    def post(self, request):
+        '''
+        Access Token 재발급
+
+        ---
+        '''
+        serializer = RefreshTokenSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(data=serializer.validated_data, status=status.HTTP_201_CREATED)

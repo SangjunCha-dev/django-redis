@@ -1,0 +1,12 @@
+FROM python:3.9.9-slim-buster
+
+ENV PYTHONUNBUFFERED=1
+ENV APP_HOME=/app
+
+RUN mkdir $APP_HOME && mkdir $APP_HOME/.static_root
+COPY ./requirements-linux.txt $APP_HOME/
+WORKDIR $APP_HOME
+
+RUN pip install -r requirements-linux.txt
+
+COPY ./ $APP_HOME/

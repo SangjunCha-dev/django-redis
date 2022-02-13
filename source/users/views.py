@@ -2,13 +2,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .serializers import *
 from common.cache import get_cache, set_cache, delete_cache, delete_cache_pattern
-from common.permission import LoginRequired
 
 APP_NAME = 'users'
 
@@ -46,9 +44,6 @@ class UserView(APIView):
     '''
     계정 정보
     '''
-    permission_classes = (LoginRequired,)
-    authentication_classes = (JWTAuthentication,)
-
     @swagger_auto_schema(responses={200: user_retrieve_response})
     def get(self, request):
         '''
@@ -117,12 +112,6 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    '''
-    로그아웃
-    '''
-    permission_classes = (LoginRequired,)
-    authentication_classes = (JWTAuthentication,)
-
     @swagger_auto_schema(request_body=LogoutSerializer, responses={200: ''})
     def post(self, request):
         '''

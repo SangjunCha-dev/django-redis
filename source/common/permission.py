@@ -13,7 +13,7 @@ class RedisJWTAuthentication(JWTAuthentication):
         try:
             user_id = validated_token[api_settings.USER_ID_CLAIM]
         except KeyError:
-            raise InvalidToken(_("Token contained no recognizable user identification"))
+            raise InvalidToken("Token contained no recognizable user identification")
 
         cache_key = {'users': user_id}
         user_cache = cache.get(cache_key)
@@ -21,12 +21,12 @@ class RedisJWTAuthentication(JWTAuthentication):
             try:
                 user = self.user_model.objects.get(**{api_settings.USER_ID_FIELD: user_id})
             except self.user_model.DoesNotExist:
-                raise AuthenticationFailed(_("User not found"), code="user_not_found")
+                raise AuthenticationFailed("User not found", code="user_not_found")
         else:
             user = user_cache
 
         if not user.is_active:
-            raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
+            raise AuthenticationFailed("User is inactive", code="user_inactive")
 
         return user
 

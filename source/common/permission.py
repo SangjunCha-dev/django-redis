@@ -4,6 +4,10 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.exceptions import AuthenticationFailed, InvalidToken
 
+from common.cache import get_cache, set_cache
+
+APP_NAME = 'users'
+
 
 class RedisJWTAuthentication(JWTAuthentication):
     def get_user(self, validated_token):
@@ -15,13 +19,15 @@ class RedisJWTAuthentication(JWTAuthentication):
         except KeyError:
             raise InvalidToken("Token contained no recognizable user identification")
 
-        cache_key = {'users': user_id}
-        user_cache = cache.get(cache_key)
+        cache_key = user_id
+        user_cache = get_cache(cache_key, APP_NAME)
         if user_cache is None:
             try:
                 user = self.user_model.objects.get(**{api_settings.USER_ID_FIELD: user_id})
             except self.user_model.DoesNotExist:
                 raise AuthenticationFailed("User not found", code="user_not_found")
+
+            set_cache(cache_key, user, APP_NAME)
         else:
             user = user_cache
 
@@ -38,17 +44,18 @@ class LoginRequired(BasePermission):
         if request.auth is None:
             return result
 
-        cache_key = {'users': request.auth.payload.get('userid')}
-        user_cache = cache.get(cache_key)
+        cache_key = request.auth.payload.get('userid')
+        user_cache = get_cache(cache_key, APP_NAME)
         if user_cache is None:
-            user_cache = request.user
-            cache.set(cache_key, user_cache)
+            user = request.user
+            set_cache(cache_key, user, APP_NAME)
+        else:
+            user = user_cache
 
-        if user_cache.is_anonymous:
+        if user.is_anonymous:
             return result
 
-        if (user_cache.userid == request.auth.payload.get('userid'))\
-            and (bool(user_cache.role_id)):
+        if (user.userid == cache_key) and (bool(user.role_id)):
             result = True
 
         return result
@@ -61,17 +68,18 @@ class AdminRequired(BasePermission):
         if request.auth is None:
             return result
 
-        cache_key = {'users': request.auth.payload.get('userid')}
-        user_cache = cache.get(cache_key)
+        cache_key = request.auth.payload.get('userid')
+        user_cache = get_cache(cache_key, APP_NAME)
         if user_cache is None:
-            user_cache = request.user
-            cache.set(cache_key, user_cache)
+            user = request.user
+            set_cache(cache_key, user, APP_NAME)
+        else:
+            user = user_cache
 
-        if user_cache.is_anonymous:
+        if user.is_anonymous:
             return result
 
-        elif (user_cache.userid == request.auth.payload.get('userid')) \
-            and (user_cache.is_admin) and (user_cache.role_id == 1):
+        elif (user.userid == cache_key) and (user.is_admin) and (user.role_id == 1):
             result = True
 
         return result

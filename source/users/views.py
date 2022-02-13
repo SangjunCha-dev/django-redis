@@ -1,4 +1,3 @@
-from django.core.cache import cache
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
@@ -8,8 +7,10 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from .serializers import *
+from common.cache import get_cache, set_cache, delete_cache, delete_cache_pattern
 from common.permission import LoginRequired
 
+APP_NAME = 'users'
 
 user_retrieve_response = openapi.Response('', UserInfoSerializer)
 login_retrieve_response = openapi.Response('', LoginResponseSerializer)
@@ -56,14 +57,15 @@ class UserView(APIView):
         ---
         사용자 계정 ID, 이메일, 가입일자, 최근 로그인 일자 조회
         '''
-        cache_key = {'users': request.user}
-        user_cache = cache.get(cache_key)
+        cache_key = f"{request.user.userid}_info"
+        user_cache = get_cache(cache_key, APP_NAME)
 
         response_data = {}
         if user_cache is None:
             serializer = UserInfoSerializer(request.user)
             response_data = serializer.data
-            cache.set(cache_key, response_data)
+            
+            set_cache(cache_key, response_data, APP_NAME)
         else:
             response_data = user_cache
 
@@ -134,8 +136,8 @@ class LogoutView(APIView):
 
         serializer.validated_data.blacklist()
         
-        cache_key = {'users': request.user}
-        cache.delete(cache_key)
+        cache_key = f"{request.user.userid}_*"
+        delete_cache_pattern(cache_key, APP_NAME)
 
         response = Response(status=status.HTTP_200_OK)
         response.delete_cookie('refresh_token')

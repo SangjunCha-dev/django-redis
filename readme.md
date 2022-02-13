@@ -1,6 +1,7 @@
 # Django redis 사용하기
 
-> JWT 사용자 접근제어와 redis를 사용하는 django 서버입니다.
+> redis를 사용하는 django 서버입니다.
+> JWT기반의 사용자 접근제어로 계정 관리 기능이 있습니다.
 
 
 ---
@@ -49,7 +50,7 @@ pip install -r requirements-[linux or windows].txt
 (venv)> pip install gunicorn
 
 # redis
-(venv)> pip install redis
+(venv)> pip install django-redis
 ```
 
 

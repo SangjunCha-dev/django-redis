@@ -54,7 +54,7 @@ services:
   django01:
     build:
       context: .
-      dockerfile: ./Dockerfile.DjangoMain
+      dockerfile: ./Dockerfile.Django
     container_name: dg01
     restart: always
     volumes:
@@ -76,7 +76,7 @@ services:
   django02:
     build:
       context: .
-      dockerfile: ./Dockerfile.DjangoMain
+      dockerfile: ./Dockerfile.Django
     container_name: dg02
     restart: always
     volumes:
@@ -96,7 +96,7 @@ services:
   django03:
     build:
       context: .
-      dockerfile: ./Dockerfile.DjangoMain
+      dockerfile: ./Dockerfile.Django
     container_name: dg03
     restart: always
     volumes:

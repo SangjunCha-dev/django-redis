@@ -42,6 +42,7 @@ class UserRole(models.Model):
 class User(AbstractBaseUser):
     userid = models.CharField(max_length=100, primary_key=True, unique=True, verbose_name='소셜사용자_id')
     email = models.EmailField(verbose_name='사용자 이메일')
+    concern = models.CharField(max_length=10, verbose_name='관심사')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='가입일자')
     last_login = models.DateTimeField(blank=True, null=True, verbose_name='최근 로그인 일자')
     withdrawal_at = models.DateTimeField(auto_now=True, null=True, verbose_name='탈퇴 일자')

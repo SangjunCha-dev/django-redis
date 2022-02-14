@@ -13,6 +13,7 @@ from .models import User, UserRole
 class CreateUserSerializer(serializers.Serializer):
     userid = serializers.CharField(max_length=20, help_text='사용자ID')
     email = serializers.EmailField(help_text='이메일')
+    concern = serializers.CharField(max_length=10, help_text='관심사')
     password1 = serializers.CharField(max_length=512, write_only=True, help_text='비밀번호')
     password2 = serializers.CharField(max_length=512, write_only=True, label='password check', help_text='비밀번호')
 
@@ -39,13 +40,14 @@ class CreateUserSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-        user = User.objects.create(
-            userid=validated_data['userid'],
-            email=validated_data['email'],
-            password=validated_data['password1'],
-            role=UserRole.objects.get_or_create(id=2, name='user')[0]
-        )
-        user.set_password(validated_data['password1'])
+        validated_data['password'] = validated_data['password1']
+        validated_data['role'] = UserRole.objects.get_or_create(id=2, name='user')[0]
+
+        del validated_data['password1']
+        del validated_data['password2']
+
+        user = User.objects.create(**validated_data)
+        user.set_password(validated_data['password'])
         user.save()
         userid = user.userid
 
@@ -55,6 +57,7 @@ class CreateUserSerializer(serializers.Serializer):
         examples = {
             "userid": "tester1",
             "email": "tester1@test.com",
+            "concern": "관심사1",
             "password1": "password",
             "password2": "password",
         }
@@ -181,9 +184,18 @@ class RefreshTokenSerializer(serializers.Serializer):
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('userid', 'email', 'created_at', 'last_login')
-        read_only_fields = ('userid', 'email', 'created_at', 'last_login')
+        fields = ('userid', 'email', 'concern', 'created_at', 'last_login')
+        read_only_fields = ('userid', 'email', 'concern', 'created_at', 'last_login')
 
+
+class UserInfoEmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('concern', 'email')
+        examples = {
+            "concern": "관심사2",
+            "email": "tester1@test.com",
+        }
 
 
 '''

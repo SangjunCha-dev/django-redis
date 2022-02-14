@@ -87,6 +87,39 @@ class UserView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(request_body=UserInfoEmailSerializer, responses={200: ''})
+    def patch(self, request, *args, **kwargs):
+        '''
+        계정 정보 수정
+
+        ---
+        '''
+        data = request.data
+
+        serializer = UserInfoEmailSerializer(request.user, data=data, partial=True)
+        if not serializer.is_valid():
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+
+        cache_key = f"{request.user.userid}_*"
+        delete_cache_pattern(cache_key, APP_NAME)
+
+        return Response(status=status.HTTP_200_OK)
+
+    def delete(self, request, *args, **kwargs):
+        '''
+        계정 삭제
+
+        ---
+        '''
+        cache_key = f"{request.user.userid}_*"
+        delete_cache_pattern(cache_key, APP_NAME)
+
+        request.user.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class LoginView(APIView):
     '''

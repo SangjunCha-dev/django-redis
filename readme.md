@@ -68,10 +68,29 @@ pip install -r requirements-[linux or windows].txt
     ```bash
     > docker-compose -f docker-compose.yml down
     ```
+- redis 접속
+    ```
+    (venv)> docker exec -it redis_cache /bin/sh
+    /data # redis-cli -h redis_cache
+    ```
+- redis 등록된 키 확인 
+    ```
+    keys *
+    ```
 
 ### 3.2. 로컬 실행
 
 ```
 > cd source
+> python manage.py makemigrations
+> python manage.py migrate
 > python manage.py runserver 127.0.0.1:8000
 ```
+
+## 4. 테스트
+
+1. 회원가입(`POST /users/register/`)하여 계정을 생성합니다.
+2. 로그인(`POST //users/login/`)한뒤 반환되는 `access_token`, `refresh_token` 값을 별도로 저장합니다.
+3. 각 API 오른쪽 자물쇠 버튼(🔒)이나 `Authorize` 클릭합니다.
+4. Value에 `access_token` 값을 입력하고 `Authorize` → `close` 순으로 클릭합니다.
+5. 사용자 인증이 완료되었고 사용자 권한이 필요한 API 테스트를 진행할 수 있습니다.

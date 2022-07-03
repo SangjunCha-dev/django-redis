@@ -62,6 +62,7 @@ class CreateUserSerializer(serializers.Serializer):
             "password2": "password",
         }
 
+
 class LoginSerializer(serializers.Serializer):
     userid = serializers.CharField(max_length=20)
     password = serializers.CharField(max_length=512, write_only=True)
@@ -157,7 +158,11 @@ class RefreshTokenSerializer(serializers.Serializer):
     def validate(self, data):
         # refresh_token 유저 검증
         try:
-            token = jwt.decode(data['refresh_token'], key=settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT['ALGORITHM'])
+            token = jwt.decode(
+                data['refresh_token'], 
+                key=settings.SECRET_KEY, 
+                algorithms=settings.SIMPLE_JWT['ALGORITHM']
+            )
         except jwt.ExpiredSignatureError:
             raise serializers.ValidationError({'error': 'Token Signature has expired'})
         except jwt.DecodeError:
@@ -180,6 +185,7 @@ class RefreshTokenSerializer(serializers.Serializer):
         examples = {
             "refresh_token": "token_value",
         }
+
 
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:

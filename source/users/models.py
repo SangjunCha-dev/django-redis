@@ -30,6 +30,7 @@ class CustomUserManager(BaseUserManager):
 
         return self._create_user(userid, **extra_fields)
 
+
 class UserRole(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=10)
@@ -38,6 +39,7 @@ class UserRole(models.Model):
         managed = True
         db_table = 'users_role'
         verbose_name_plural = '사용자 권한'
+
 
 class User(AbstractBaseUser):
     userid = models.CharField(max_length=100, primary_key=True, unique=True, verbose_name='소셜사용자_id')
@@ -50,7 +52,13 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField(default=True, verbose_name='계정 활성화 여부')
     is_admin = models.BooleanField(default=False, verbose_name='관리자 여부')
 
-    role = models.ForeignKey(UserRole, related_name='user', db_column='role_id', on_delete=models.PROTECT, verbose_name='사용자 권한')
+    role = models.ForeignKey(
+        UserRole, 
+        related_name='user', 
+        db_column='role_id', 
+        on_delete=models.PROTECT, 
+        verbose_name='사용자 권한'
+    )
     
     objects = CustomUserManager()
     USERNAME_FIELD = 'userid'

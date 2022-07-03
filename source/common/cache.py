@@ -1,5 +1,6 @@
 from django.core.cache import cache
 
+
 # redis 설정 되었을 경우에만 캐시 동작
 def get_cache(cache_key: str, version: str):
     if hasattr(cache, 'delete_pattern'):

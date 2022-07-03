@@ -1,6 +1,5 @@
 
 from django.contrib.auth.backends import BaseBackend
-from django.core.cache import cache
 
 from .cache import get_cache, set_cache
 from users.models import User
